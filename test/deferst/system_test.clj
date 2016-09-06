@@ -18,8 +18,7 @@
              {:foo 10})))))
 
 (deftest empty-system-stops
-  (let [ff (fn [v] [v (fn [] (prn "destroying" v))])
-        sb (s/system-builder [])
+  (let [sb (s/system-builder [])
         sys (s/start-system! sb {:foo 10})
         _ (s/stop-system! sys)]
 
@@ -43,6 +42,16 @@
       (is (= @destructor-vals
              [{:a-arg 10}])))))
 
+(deftest single-item-system-without-destructors
+  (let [sb (s/system-builder [[:a identity {:a-arg [:foo]}]])
+        sys (s/start-system! sb {:foo 10})
+        _ (s/stop-system! sys)]
+
+    (testing "single item system has the single object"
+      (is (= @(s/system-map sys)
+             {:foo 10
+              :a {:a-arg 10}})))))
+
 (deftest dependent-item-system
   (let [destructor-vals (atom [])
         ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])
@@ -62,11 +71,29 @@
              [{:b-arg 10}
               {:a-arg 10}])))))
 
+(deftest dependent-item-system-with-mixed-destructors
+  (let [destructor-vals (atom [])
+        ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])
+        sb (s/system-builder [[:a identity {:a-arg [:foo]}]
+                              [:b ff {:b-arg [:a :a-arg]}]])
+        sys (s/start-system! sb {:foo 10})
+        _ (s/stop-system! sys)]
+
+    (testing "dependent items are created"
+      (is (= @(s/system-map sys)
+             {:foo 10
+              :a {:a-arg 10}
+              :b {:b-arg 10}})))
+
+    (testing "dependent items were destroyed"
+      (is (= @destructor-vals
+             [{:b-arg 10}])))))
+
 (deftest composed-builders
   (let [destructor-vals (atom [])
         ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])
         sb (s/system-builder [[:a ff {:a-arg [:foo]}]
-                              [:b ff {:b-arg [:a :a-arg]}]])
+                              [:b identity {:b-arg [:a :a-arg]}]])
         sb2 (s/system-builder sb [[:c ff {:c-a [:a :a-arg]
                                           :c-b [:b :b-arg]}]])
         sys (s/start-system! sb2 {:foo 10})
@@ -82,5 +109,4 @@
     (testing "items were destroyed"
       (is (= @destructor-vals
              [{:c-a 10 :c-b 10}
-              {:b-arg 10}
               {:a-arg 10}])))))

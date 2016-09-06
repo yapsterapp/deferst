@@ -2,6 +2,8 @@
 
 a tiny clojure/script library for managing systems of objects
 
+it uses a deferred-state monad transformer internally, hence *deferst*
+
 ## Usage
 
 - objects are created by factory functions

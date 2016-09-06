@@ -25,8 +25,9 @@
   (stop! [_]
     (when @sys-atom
       (when label (println "stopping: " label))
-      (s/stop-system! @sys-atom)
-      (reset! sys-atom nil)))
+      (let [r (s/stop-system! @sys-atom)]
+        (reset! sys-atom nil)
+        r)))
 
   (system-map [_]
     (s/system-map @sys-atom)))
@@ -34,6 +35,8 @@
 (defn create-system
   ([builder]
    (create-system builder nil nil))
+  ([builder default-conf]
+   (create-system builder default-conf nil))
   ([builder default-conf label]
    (map->Sys {:builder builder
               :sys-atom (atom nil)

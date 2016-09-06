@@ -51,7 +51,7 @@
         sys (s/start-system! sb {:foo 10})
         _ (s/stop-system! sys)]
 
-    (testing "single item system has the single object"
+    (testing "dependent items are created"
       (is (= @(s/system-map sys)
              {:foo 10
               :a {:a-arg 10}
@@ -72,7 +72,7 @@
         sys (s/start-system! sb2 {:foo 10})
         _ (s/stop-system! sys)]
 
-    (testing "single item system has the single object"
+    (testing "items are created"
       (is (= @(s/system-map sys)
              {:foo 10
               :a {:a-arg 10}

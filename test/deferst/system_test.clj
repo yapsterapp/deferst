@@ -28,38 +28,59 @@
              true)))))
 
 (deftest single-item-system
-  (let [ff (fn [v] [v (fn [] (prn "destroying" v))])
+  (let [destructor-vals (atom [])
+        ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])
         sb (s/system-builder [[:a ff {:a-arg [:foo]}]])
-        sys (s/start-system! sb {:foo 10})]
+        sys (s/start-system! sb {:foo 10})
+        _ (s/stop-system! sys)]
 
     (testing "single item system has the single object"
       (is (= @(s/system-map sys)
              {:foo 10
-              :a {:a-arg 10}})))))
+              :a {:a-arg 10}})))
+
+    (testing "single item was destroyed"
+      (is (= @destructor-vals
+             [{:a-arg 10}])))))
 
 (deftest dependent-item-system
-  (let [ff (fn [v] [v (fn [] (prn "destroying" v))])
+  (let [destructor-vals (atom [])
+        ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])
         sb (s/system-builder [[:a ff {:a-arg [:foo]}]
                               [:b ff {:b-arg [:a :a-arg]}]])
-        sys (s/start-system! sb {:foo 10})]
+        sys (s/start-system! sb {:foo 10})
+        _ (s/stop-system! sys)]
 
     (testing "single item system has the single object"
       (is (= @(s/system-map sys)
              {:foo 10
               :a {:a-arg 10}
-              :b {:b-arg 10}})))))
+              :b {:b-arg 10}})))
+
+    (testing "dependent items were destroyed"
+      (is (= @destructor-vals
+             [{:b-arg 10}
+              {:a-arg 10}])))))
 
 (deftest composed-builders
-  (let [ff (fn [v] [v (fn [] (prn "destroying" v))])
+  (let [destructor-vals (atom [])
+        ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])
         sb (s/system-builder [[:a ff {:a-arg [:foo]}]
                               [:b ff {:b-arg [:a :a-arg]}]])
         sb2 (s/system-builder sb [[:c ff {:c-a [:a :a-arg]
                                           :c-b [:b :b-arg]}]])
-        sys (s/start-system! sb2 {:foo 10})]
+        sys (s/start-system! sb2 {:foo 10})
+        _ (s/stop-system! sys)]
 
     (testing "single item system has the single object"
       (is (= @(s/system-map sys)
              {:foo 10
               :a {:a-arg 10}
               :b {:b-arg 10}
-              :c {:c-a 10 :c-b 10}})))))
+              :c {:c-a 10 :c-b 10}})))
+
+    (testing "items were destroyed"
+      (is (= @destructor-vals
+             [{:c-a 10 :c-b 10}
+              {:b-arg 10}
+              {:a-arg 10}])))))

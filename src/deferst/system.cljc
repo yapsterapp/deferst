@@ -14,7 +14,11 @@
 ;; destructors are added by put-obj and
 ;; called in reverse order during stop!
 (def ^:private SystemStateSchema
-  {:config/destroyed (s/pred #(instance? clojure.lang.Atom %))
+  {:config/destroyed (s/pred (fn [v]
+                               (and (instance? clojure.lang.Atom v)
+                                    (or (nil? @v)
+                                        (= true @v)
+                                        (= false @v)))))
    :config/destructors [[(s/one s/Keyword :destructor-key)
                          (s/one (s/maybe (s/pred fn?)) :destructor-fn)]]
    s/Keyword s/Any})

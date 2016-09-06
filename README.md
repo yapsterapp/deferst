@@ -27,13 +27,13 @@ it uses a deferred-state monad transformer internally, hence *deferst*
 ;; a composable builder for a system
 (def builder (s/system-builder [[:client build-client {:dir [:config :dir]}]
                                 [:server build-server {:port [:config :port]
-                                                       :client client}]]))
+                                                       :client [:client]}]]))
 
 ;; a simple way of starting, stopping and reloading
-(d/defsystem foo builder {:dir "/tmp/cache" :port 8080})
+(d/defsystem foo builder {:config {:dir "/tmp/cache" :port 8080}})
 
 ;; start up the system
-(foo-start!) ;; => Deferred< {:client *client* :server *server*} >
+(foo-start!) ;; => Deferred< {:client *client* :server *server* :config *config*} >
 
 ;; shut it down
 (foo-stop!)

@@ -1,10 +1,45 @@
 # deferst
 
-a tiny clojure/script library for creating systems of objects
+a tiny clojure/script library for managing systems of objects
 
 ## Usage
 
+- objects are created by factory functions
+- factory functions return either just an object or a pair of `[object destructor-fn]`
+- factory functions are given an argument map gathered from the state
+- builders are created with a list of object specs
+- object specs are `[key factory-fn arg-specs]`
+- builders can be composed
+- there's a handy macro to provide start!, stop! and reload! functions
 
+
+``` clojure
+(defn build-client [{:keys [dir]}] (client/create {:dir dir}))
+(defn build-server [{:keys [client port]}]
+  (let [s (server/create port client)]
+    [s (fn [] (server/stop s))]))
+
+(require '[deferst.system :as s])
+(require '[deferst :as d])
+
+;; a composable builder for a system
+(def builder (s/system-builder [[:client build-client {:dir [:config :dir]}]
+                                [:server build-server {:port [:config :port]
+                                                       :client client}]]))
+
+;; a simple way of starting, stopping and reloading
+(d/defsystem foo builder {:dir "/tmp/cache" :port 8080})
+
+;; start up the system
+(foo-start!) ;; => Deferred< {:client *client* :server *server*} >
+
+;; shut it down
+(foo-stop!)
+
+;; stop, tools.namespace refresh and start
+(foo-reload!)
+
+```
 
 ## License
 

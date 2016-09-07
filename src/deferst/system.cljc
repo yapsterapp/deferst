@@ -102,7 +102,12 @@
   (with-context config-ctx
     (mlet [st (get-state)
            :let [args (factory-args st arg-specs)]
-           obj-and-destructor-fn (return (obj-factory-fn args))
+           obj-and-destructor-fn (try
+                                   (return (obj-factory-fn args))
+                                   (catch Exception e
+                                     (throw (ex-info "factory-fn threw"
+                                                     {:state st
+                                                      :error e}))))
            :let [[obj destructor-fn] (if (sequential? obj-and-destructor-fn)
                                        obj-and-destructor-fn
                                        [obj-and-destructor-fn])]]
@@ -125,13 +130,60 @@
            (or base-system-builder (new-system))
            key-factoryfn-argspecs-list)))
 
+(defn- call-destructor-fns
+  "calls destructor fns in reverse order,
+   collecting a list of Exceptions along the way"
+  [destructor-fns]
+  (doall
+   (filter
+    identity
+    (for [[_ df] (reverse destructor-fns)]
+      (when df
+        (try
+          (df)
+          nil
+          (catch Exception e
+            e)))))))
+
+(defn stop-system!
+  "given a Deferred<[_, system]> stop the system, running
+   destructor functions in reverse order to object construction"
+  [sys]
+  (with-context dm/deferred-context
+    (bind sys
+          (fn [[_ st]]
+            (let [da (:config/destroyed st)
+                  d? @da
+                  destr (:config/destructors st)]
+              (reset! da true)
+              (if-not d?
+                (let [d-errors (call-destructor-fns destr)]
+                  (if (empty? d-errors)
+                    true
+                    d-errors))
+                false))))))
+
 (defn start-system!
   "given a system-builder, start a system with the seed config
-   returns a Deferred<[system-map, system]>"
+   returns a Deferred<[system-map, system]>. if an Exception
+   is thrown somewhere, unwind the system construction and
+   call destructor functions for the objects which have so
+   far been constructed"
   [system-builder seed]
-  (run-state
-   system-builder
-   seed))
+  (-> (run-state system-builder seed)
+      (d/catch
+          Exception
+          (fn [e]
+            (let [{st :state :as xd} (ex-data e)
+                  da (:config/destroyed st)
+                  destr (:config/destructors st)]
+              (reset! da true)
+              (let [d-errors (call-destructor-fns destr)]
+                (throw
+                 (ex-info "start-system! failed and unwound"
+                          {:state st
+                           :destructor-errors d-errors
+                           :error e}))))))))
 
 (defn system-map
   "given a Deferred<[system-map, system]> extract the system-map
@@ -141,21 +193,6 @@
     (bind sys
           (fn [[sm _]]
             (return sm)))))
-
-(defn stop-system!
-  "given a Deferred<[_, system]> stop the system"
-  [sys]
-  (with-context dm/deferred-context
-    (bind sys
-          (fn [[_ st]]
-            (let [da (:config/destroyed st)
-                  d? @da
-                  destr (:config/destructors st)]
-              (when-not d?
-                (doseq [[_ df] (reverse destr)]
-                  (when df (df)))
-                (reset! da true))
-              (not d?))))))
 
 (comment
   (require '[deferst.system :as dfs])

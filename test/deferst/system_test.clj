@@ -4,6 +4,7 @@
    [clojure.set :as set]
    [schema.test]
    [clojure.test :as test :refer [deftest is are testing use-fixtures]]
+   [manifold.deferred :as d]
    [deferst.system :as s]))
 
 ;; check schemas
@@ -110,3 +111,19 @@
       (is (= @destructor-vals
              [{:c-a 10 :c-b 10}
               {:a-arg 10}])))))
+
+(deftest unwind-on-builder-error
+  (let [destructor-vals (atom [])
+        ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])
+        boom (fn [v] (throw (ex-info "boom" {:boom true})))
+        sb (s/system-builder [[:a ff {:a-arg [:foo]}]
+                              [:b boom {:b-arg [:a :a-arg]}]])
+        sys (s/start-system! sb {:foo 10})]
+    (testing "system is unwound"
+      (is (= @destructor-vals [{:a-arg 10}]))
+      (is (= (-> (d/error-value sys nil)
+                 ex-data
+                 :state
+                 :config/destroyed
+                 deref)
+             true)))))

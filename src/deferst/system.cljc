@@ -2,9 +2,12 @@
   (:require
    [schema.core :as s]
    [cats.context :refer [with-context]]
-   [cats.core :refer [mlet return bind]]
    [cats.labs.state
     :refer [state-t get-state put-state swap-state run-state]]
+
+   ;; has to come after state, because of the re-aninated nature
+   ;; of monad transformers
+   [cats.core :refer [mlet return bind lift]]
    #?(:clj [cats.labs.manifold :as dm]
       :cljs [cats.labs.promise :as pm])
    #?(:clj [manifold.deferred :as d])))
@@ -87,6 +90,10 @@
           {}
           arg-specs))
 
+(defn- is-promise?
+  [obj]
+  (d/deferred? obj))
+
 (defn- build-obj
   "build a single object and put in the system at key k given
   a factory-fn and arg-specs
@@ -103,7 +110,10 @@
     (mlet [st (get-state)
            :let [args (factory-args st arg-specs)]
            obj-and-destructor-fn (try
-                                   (return (obj-factory-fn args))
+                                   (let [obj (obj-factory-fn args)]
+                                     (if (is-promise? obj)
+                                       (lift config-ctx obj)
+                                       (return obj)))
                                    (catch Exception e
                                      (throw (ex-info "factory-fn threw"
                                                      {:state st

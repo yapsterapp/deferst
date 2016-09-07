@@ -7,9 +7,9 @@ it uses a deferred-state monad transformer internally, hence *deferst*
 ## Usage
 
 - objects are created by factory functions
-- factory functions return either just an object or a pair of `[object destructor-fn]`
+- factory functions return either just an object or a pair of `[object destructor-fn]`, or a promise/Deferred of the same
 - factory functions are given an argument map gathered from the state according to arg-specs
-- factory functions can be asynchronous
+- factory functions can be asynchronous - just return a Deferred/promise of the object or `[object destructor-fn]` pair
 - system builders are created with a list of object specs
 - object specs are `[key factory-fn arg-specs]`
 - objects will be built with the `factory-fn` and placed in the system with the `key`

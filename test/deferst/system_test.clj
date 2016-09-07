@@ -53,6 +53,20 @@
              {:foo 10
               :a {:a-arg 10}})))))
 
+(deftest single-deferred-item-system
+  (let [destructor-vals (atom [])
+        ff (fn [v] (d/success-deferred
+                    [v (fn [] (swap! destructor-vals conj v))]))
+        sb (s/system-builder [[:a ff {:a-arg [:foo]}]])
+        sys (s/start-system! sb {:foo 10})
+        _ (s/stop-system! sys)]
+
+    (testing "single item system has the single object"
+      (is (= @(s/system-map sys)
+             {:foo 10
+              :a {:a-arg 10}})))))
+
+
 (deftest dependent-item-system
   (let [destructor-vals (atom [])
         ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])

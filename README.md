@@ -14,7 +14,7 @@ it uses a deferred-state monad transformer internally, hence *deferst*
 - object specs are `[key factory-fn arg-specs]`
 - builders can be composed
 - builders return promises of a system, making synchronisation trivial
-- there's a handy macro to provide start!, stop! and reload! functions
+- there's a handy macro to provide start!, stop! functions, and tools.namespace based reload!
 
 
 ``` clojure

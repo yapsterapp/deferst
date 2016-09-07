@@ -8,13 +8,16 @@ it uses a deferred-state monad transformer internally, hence *deferst*
 
 - objects are created by factory functions
 - factory functions return either just an object or a pair of `[object destructor-fn]`
-- factory functions are given an argument map gathered from the state
+- factory functions are given an argument map gathered from the state according to arg-specs
 - factory functions can be asynchronous
-- builders are created with a list of object specs
+- system builders are created with a list of object specs
 - object specs are `[key factory-fn arg-specs]`
-- builders can be composed
-- builders return promises of a system, making synchronisation trivial
-- there's a handy macro to provide start!, stop! functions, and tools.namespace based reload!
+- objects will be built with the `factory-fn` and placed in the system with the `key`
+- system builders can be composed
+- `system-start!` takes a system builder and a map of config and returns a promise of a system, making synchronisation trivial
+- errors during a `system-start!` cause the operation to be unwound, calling destructor functions on already constructed objects
+- `system-stop!` calls a system's destructor functions in reverse order of object construction
+- there's a handy macro which defines start!, stop! functions, and tools.namespace based reload! for a single system
 
 
 ``` clojure

@@ -6,18 +6,18 @@ it uses a deferred-state monad transformer internally, hence *deferst*
 
 ## Usage
 
-- objects are created by factory functions
-- factory functions return either just an object or a pair of `[object destructor-fn]`, or a promise/Deferred of the same
-- factory functions are given an argument map gathered from the state according to arg-specs
-- factory functions can be asynchronous - just return a Deferred/promise of the object or `[object destructor-fn]` pair
-- system builders are created with a list of object specs
-- object specs are `[key factory-fn arg-specs]`
-- objects will be built with the `factory-fn` and placed in the system with the `key`
+- systems are maps of objects identified by keyword keys
+- `system-builder`s build systems by creating one object at a time and adding it to the system map against its key
+- `system-builder`s create objects using `factory-ns` which are fed a map of arguments extracted from paths in the current system map
+- `factory-fns` return either just an `object` or a pair of `[object destructor-fn]`, or a `promise`/`Deferred` of the same
+- `factory-fns` can be asynchronous - just return a `Deferred`/`promise` of the `object` or `[object destructor-fn]` pair
+- `system-builder`s are created with a list of `object-specs` which are `[key factory-fn arg-specs]` and specify all the information a `system-builder` needs to create an `object`
+- `system-builder`s iterate over their `object-specs` in order, extracting args from the current system-map according to `arg-specs`, building an `object` with `factory-fn` and storing the `object` in the system map against `key`
 - system builders can be composed
-- `system-start!` takes a system builder and a map of config and returns a promise of a system, making synchronisation trivial
-- errors during a `system-start!` cause the operation to be unwound, calling destructor functions on already constructed objects
-- `system-stop!` calls a system's destructor functions in reverse order of object construction
-- there's a handy macro which defines start!, stop! functions, and tools.namespace based reload! for a single system
+- `system-start!` takes a `system-builder` and a map of `config` and returns a `promise`/`Deferred` of a system, making synchronisation trivial
+- errors during a `system-start!` cause the operation to be unwound, calling `destructor-fns` for already constructed objects
+- `system-stop!` calls a system's `destructor-fns` in reverse order of object construction
+- there's a handy macro which defines `start!`, `stop!` functions, and `tools.namespace` based `reload!` for a single system
 
 
 ``` clojure

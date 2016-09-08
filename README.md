@@ -22,8 +22,16 @@ it uses a deferred-state monad transformer internally, hence *deferst*
 
 
 ``` clojure
-(defn create-db-connection [{:keys [host port]}] (db/create-connection host port))
+;; some object factory functions - they take a single map arg
+
+(defn create-db-connection [{:keys [host port]}]
+  ;; this might take a while, so let's do it async
+  (manifold.deferred/future
+    (let [conn (db/create-connection host port)]
+      [conn (fn [] (db/close conn))])))
+
 (defn create-client [{:keys [dir db]}] (client/create {:dir dir :db db}))
+
 (defn create-server [{:keys [client port db]}]
   (let [s (server/create port db client)]
     [s (fn [] (server/stop s))]))

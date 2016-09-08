@@ -1,5 +1,7 @@
 # deferst
 
+[![Build Status](https://travis-ci.org/employeerepublic/deferst.svg?branch=master)](https://travis-ci.org/employeerepublic/deferst)
+
 a tiny clojure/script library for managing systems of objects
 
 it uses a deferred-state monad transformer internally, hence *deferst*

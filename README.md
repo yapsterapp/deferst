@@ -22,55 +22,64 @@ it uses a deferred-state monad transformer internally, hence *deferst*
 
 
 ``` clojure
-(defn build-client [{:keys [dir]}] (client/create {:dir dir}))
-(defn build-server [{:keys [client port]}]
-  (let [s (server/create port client)]
+(defn create-db-connection [{:keys [host port]}] (db/create-connection host port))
+(defn create-client [{:keys [dir db]}] (client/create {:dir dir :db db}))
+(defn create-server [{:keys [client port db]}]
+  (let [s (server/create port db client)]
     [s (fn [] (server/stop s))]))
 
 (require '[deferst.system :as s])
 (require '[deferst :as d])
 
 ;; a builder for a system
-(def base-builder (s/system-builder
-                     [[:client build-client {:dir [:config :dir]}]
-                      [:server build-server {:port [:config :port]
-                                             :client [:client]}]]))
+(def client-builder (s/system-builder
+                     [[:db create-db-connection {:host [:config :db :host]
+                                                 :port [:config :db :port]}]
+                      [:client createclient {:dir [:config :dir]
+                                             :db :db}]]))
+
 ;; builders can be composed
-(def builder (s/system-builder
-                base-builder
-                [[:thingy build-thingy {:count [:config :thingy-count]
-                                        :client [:client]}]]))
+(def server-builder (s/system-builder
+                      client-builder
+                      [[:server create-server {:port [:config :port]
+                                               :db [:db]
+                                               :client :client}]))
 
 ;; give a config map to a system to start it
-(def sys (s/start-system! builder {:config {:dir "/tmp/cache"
-                                   :port 8080
-                                   :thingy-count 5}}))
+(def sys (s/start-system!
+            server-builder
+            {:config {:db {:host "localhost" :port 9042}
+                      :dir "/tmp/cache"
+                      :port 8080}}))
 
 ;; get the system-map from the running system
 (s/system-map sys) ;; => Deferred< {:config ...
+                   ;;               :db     ...
                    ;;               :client ...
-                   ;;               :server ...
-                   ;;               :thingy ...} >
+                   ;;               :server ...} >
 
 ;; stop the system, calling destructor functions in reverse order
 (s/stop-system! sys)
 
 ;; the defsystem macro creates some convenience functions
-(d/defsystem foo builder {:config {:dir "/tmp/cache"
-                                   :port 8080
-                                   :thingy-count 5}})
+(d/defsystem
+  foo-server
+  server-builder
+  {:config {:db {:host "localhost" :port 9042}
+            :dir "/tmp/cache"
+            :port 8080}})
 
 ;; start up the system
-(foo-start!) ;; => Deferred< {:config ...
-             ;;               :client ...
-             ;;               :server ...
-             ;;               :thingy ...} >
+(foo-server-start!) ;; => Deferred< {:config ...
+                    ;;               :db     ...
+                    ;;               :client ...
+                    ;;               :server ...} >
 
 ;; shut it down
-(foo-stop!)
+(foo-server-stop!)
 
 ;; stop, tools.namespace refresh and start again
-(foo-reload!)
+(foo-server-reload!)
 
 ```
 

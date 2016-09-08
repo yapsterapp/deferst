@@ -43,8 +43,8 @@ it uses a deferred-state monad transformer internally, hence *deferst*
 (def client-builder (s/system-builder
                      [[:db create-db-connection {:host [:config :db :host]
                                                  :port [:config :db :port]}]
-                      [:client createclient {:dir [:config :dir]
-                                             :db :db}]]))
+                      [:client create-client {:dir [:config :dir]
+                                              :db :db}]]))
 
 ;; builders can be composed
 (def server-builder (s/system-builder

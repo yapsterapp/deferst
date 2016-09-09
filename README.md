@@ -2,9 +2,7 @@
 
 [![Build Status](https://travis-ci.org/employeerepublic/deferst.svg?branch=master)](https://travis-ci.org/employeerepublic/deferst)
 
-a tiny clojure/script library for managing systems of objects
-
-it uses a deferred-state monad transformer internally, hence *deferst*
+a tiny clojure/script library for managing systems of objects. it won't infect your codebase, and it's async friendly
 
 ## Usage
 
@@ -92,6 +90,10 @@ it uses a deferred-state monad transformer internally, hence *deferst*
 (foo-server-reload!)
 
 ```
+
+## Name
+
+internally it uses a deferred-state monad transformer, hence *deferst*
 
 ## License
 

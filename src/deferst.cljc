@@ -10,24 +10,30 @@
 
 (defrecord Sys [builder sys-atom default-conf label]
   ISys
-  (start! [_]
-    (when-not @sys-atom
-      (when label (println "starting: " label))
-      (reset! sys-atom (s/start-system! builder default-conf)))
-    (s/system-map @sys-atom))
+  (start! [this]
+    (start! this default-conf))
 
   (start! [_ conf]
-    (when-not @sys-atom
-      (when label (println "starting: " label))
-      (reset! sys-atom (s/start-system! builder conf)))
+    (swap!
+     sys-atom
+     (fn [sys]
+       (if sys
+         sys
+         (do
+           (when label (println "starting: " label))
+           (s/start-system! builder conf)))))
     (s/system-map @sys-atom))
 
   (stop! [_]
-    (when @sys-atom
-      (when label (println "stopping: " label))
-      (let [r (s/stop-system! @sys-atom)]
-        (reset! sys-atom nil)
-        r)))
+    (let [r (atom nil)]
+      (swap!
+       sys-atom
+       (fn [sys]
+         (when sys
+           (when label (println "stopping: " label))
+           (reset! r (s/stop-system! @sys-atom))
+           nil)))
+      @r))
 
   (system-map [_]
     (s/system-map @sys-atom)))

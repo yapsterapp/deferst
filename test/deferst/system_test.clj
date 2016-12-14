@@ -43,6 +43,31 @@
       (is (= @destructor-vals
              [{:a-arg 10}])))))
 
+(deftest single-item-system-with-vector-arg-specs
+  (let [destructor-vals (atom [])
+        ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])
+        sb (s/system-builder [[:a ff [:foo]]])
+        sys (s/start-system! sb {:foo 10})
+        _ (s/stop-system! sys)]
+
+    (testing "single item system has the single object"
+      (is (= @(s/system-map sys)
+             {:foo 10
+              :a 10})))
+
+    (testing "single item was destroyed"
+      (is (= @destructor-vals
+             [10])))))
+
+(deftest bad-arg-specs-throw
+  (let [destructor-vals (atom [])
+        ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])
+        sb (s/system-builder [[:a ff :foo]])]
+
+    (testing "an error is thrown describing the bad arg specs"
+      (is (thrown? clojure.lang.ExceptionInfo
+                   @(s/start-system! sb {:foo 10}))))))
+
 (deftest single-item-system-without-destructors
   (let [sb (s/system-builder [[:a identity {:a-arg [:foo]}]])
         sys (s/start-system! sb {:foo 10})
@@ -85,6 +110,25 @@
       (is (= @destructor-vals
              [{:b-arg 10}
               {:a-arg 10}])))))
+
+(deftest dependent-item-system-with-vector-arg-specs
+  (let [destructor-vals (atom [])
+        ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])
+        sb (s/system-builder [[:a ff [:foo]]
+                              [:b ff {:b-arg [:a]}]])
+        sys (s/start-system! sb {:foo 10})
+        _ (s/stop-system! sys)]
+
+    (testing "dependent items are created"
+      (is (= @(s/system-map sys)
+             {:foo 10
+              :a 10
+              :b {:b-arg 10}})))
+
+    (testing "dependent items were destroyed"
+      (is (= @destructor-vals
+             [{:b-arg 10}
+              10])))))
 
 (deftest dependent-item-system-with-mixed-destructors
   (let [destructor-vals (atom [])

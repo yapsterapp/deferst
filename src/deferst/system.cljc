@@ -78,17 +78,30 @@
        (return (filter-system-map st))))))
 
 (defn- factory-args
-  "given args-specs of form {k key-or-key-path} extract
-   args from state, returning a map of {k extracted-val}"
+  "given args-specs of form
+   {k key-or-key-path} or [key-path] extract
+   args from state"
   [st arg-specs]
-  (reduce (fn [args [k arg-spec]]
-            (assoc args
-                   k
-                   (get-in st (if (sequential? arg-spec)
-                                arg-spec
-                                [arg-spec]))))
-          {}
-          arg-specs))
+  (cond
+    (map? arg-specs)
+    (reduce (fn [args [k arg-spec]]
+              (assoc args
+                     k
+                     (get-in st (if (sequential? arg-spec)
+                                  arg-spec
+                                  [arg-spec]))))
+            {}
+            arg-specs)
+
+    (vector? arg-specs)
+    (get-in st arg-specs)
+
+    :else
+    (throw
+     (ex-info
+      "args-specs must be a state path vector or a map of state path vectors"
+      {:state st
+       :arg-specs arg-specs}))))
 
 (defn- is-promise?
   [obj]

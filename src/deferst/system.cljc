@@ -77,6 +77,32 @@
          (throw (ex-info "invalid system state" {:state st})))
        (return (filter-system-map st))))))
 
+(defn- pop-obj
+  "pops the most recently put obj, calling it's destructor-fn and
+   removing it from the context"
+  []
+  (with-context config-ctx
+    (mlet [st (get-state)
+           :let [des (:config/destructors st)
+                 [k des-fn] (last des)
+
+                 _ (when (nil? k)
+                     (throw (ex-info "no object to pop" {:state st})))
+
+                 _ (when-not (contains? st k)
+                     (throw (ex-info (str "state key doesn't exist: " k)
+                                     {:state st
+                                      :key k})))]
+           _ (put-state
+              (->> st
+                   (dissoc k)
+                   (assoc :config/desructors
+                          (subvec des 0 (dec (count des))))))
+           st (get-state)]
+      (when-not (valid-system-state? st)
+        (throw (ex-info "invalid system state" {:state st})))
+      (return (filter-system-map st)))))
+
 (defn- factory-args
   "given args-specs of form
    {k key-or-key-path} or [key-path] extract

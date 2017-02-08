@@ -1,6 +1,7 @@
 (ns deferst
   (:require
    [clojure.tools.namespace.repl :as tn]
+   [clojure.string :as str]
    [deferst.system :as s]))
 
 (defprotocol ISys
@@ -49,19 +50,20 @@
               :default-conf default-conf
               :label label})))
 
-(defmacro defsystem
-  "macro which defs some vars around a system and provides
-   easy tools-namespace reloading. you get
+(defn- make-name
+  [base-name suffix]
+  (->> [base-name suffix]
+       (filter identity)
+       (str/join "-")
+       symbol))
 
-   <name> - the Sys record
-   <name>-start! - start the system, with optional config
-   <name>-stop! - stop the system if running
-   <name>-reload! - stop!, tools.namespace refresh, start!"
-  [name builder default-conf]
-  (let [start-name (symbol (str name "-start!"))
-        system-map-name (symbol (str name "-system-map"))
-        stop-name (symbol (str name "-stop!"))
-        reload-name (symbol (str name "-reload!"))]
+(defn- defsystem*
+  [base-name builder default-conf]
+  (let [name (make-name base-name "sys")
+        start-name (make-name base-name "start!")
+        system-map-name (make-name base-name "system-map")
+        stop-name (make-name base-name "stop!")
+        reload-name (make-name base-name "reload!")]
     `(do
        (def ~name (create-system
                    ~builder
@@ -75,3 +77,16 @@
        (defn ~reload-name []
          (stop! ~name)
          (tn/refresh :after (symbol (name (ns-name *ns*)) (name '~start-name)))))))
+
+(defmacro defsystem
+  "macro which defs some vars around a system and provides
+   easy tools-namespace reloading. you get
+
+   <name> - the Sys record
+   <name>-start! - start the system, with optional config
+   <name>-stop! - stop the system if running
+   <name>-reload! - stop!, tools.namespace refresh, start!"
+  ([builder default-conf]
+   (defsystem* nil builder default-conf))
+  ([name builder default-conf]
+   (defsystem* name builder default-conf)))

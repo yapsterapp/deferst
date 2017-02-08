@@ -268,9 +268,7 @@
       (d/catch
           Exception
           (fn [e]
-            ;; (prn "FAILED" e)
             (let [{st :state :as xd} (ex-data e)
-                  _ (prn "FAILED STATE" st)
                   sd (system-destructor st)]
               (d/chain
                (d/catch

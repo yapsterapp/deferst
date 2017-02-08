@@ -1,4 +1,4 @@
-(defproject employeerepublic/deferst "0.3.1"
+(defproject employeerepublic/deferst "0.4.0"
   :description "a simple object system builder"
   :url "http://egithub.com/employeerepublic/deferst"
   :license {:name "Eclipse Public License"

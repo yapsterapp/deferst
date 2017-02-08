@@ -80,30 +80,49 @@
            _ (put-state st)]
       (return (filter-system-map st)))))
 
+(defn- arg-specs->deps
+  "given arg-specs of form {k key-or-key-path} or [key-path]
+   return dependencies as #{dep}"
+  [st arg-specs]
+  (cond
+    (map? arg-specs)
+    (reduce (fn [deps* [k arg-spec]]
+              (conj deps* (if (vector? arg-spec)
+                            (first arg-spec)
+                            arg-spec)))
+            #{}
+            arg-specs)
+
+    (vector? arg-specs)
+    #{(first arg-specs)}
+
+    :else
+    (throw
+     (ex-info
+      "args-specs must be a state path vector or a map of state path vectors"
+      {:state st
+       :arg-specs arg-specs}))))
+
 (defn- factory-args
   "given args-specs of form
    {k key-or-key-path} or [key-path] extract
-   args and dependencies from state and return
-   [args deps] where args is a map of {key val}
-   and deps is a set #{dep-key}"
+   args from state and return a map of {key val}"
   [st arg-specs]
   (cond
     (map? arg-specs)
     (reduce
-     (fn [[args deps] [k arg-spec]]
+     (fn [args [k arg-spec]]
        (let [arg-spec (if (vector? arg-spec)
                         arg-spec
                         [arg-spec])]
-         [(assoc args
-                 k
-                 (get-in st arg-spec))
-          (conj deps (first arg-spec))]))
-     [{} #{}]
+         (assoc args
+                k
+                (get-in st arg-spec))))
+     {}
      arg-specs)
 
     (vector? arg-specs)
-    [(get-in st arg-specs)
-     #{(first arg-specs)}]
+    (get-in st arg-specs)
 
     :else
     (throw
@@ -137,7 +156,8 @@
   (with-context config-ctx
     (mlet
       [st (get-state)
-       :let [[args deps] (factory-args st arg-specs)]
+       :let [args (factory-args st arg-specs)
+             deps (arg-specs->deps st arg-specs)]
        obj-and-maybe-destructor-fn (construct-maybe-lift st factory-fn args)
        :let [[obj destructor-fn] (if (sequential? obj-and-maybe-destructor-fn)
                                    obj-and-maybe-destructor-fn
@@ -215,6 +235,30 @@
       (return
        (filter-system-map new-st)))))
 
+(defn- toposort-key-factoryfn-argspecs-list
+  "topo-sort the list of [key factory-fn argspecs] tuples so
+   object construction is dependency ordered"
+  [key-factoryfn-argspecs-list]
+  (let [kkfa (->> key-factoryfn-argspecs-list
+                  (map (fn [[k factory-fn arg-specs :as kfa]]
+                         [k kfa]))
+                  (into {}))
+        kd (->> key-factoryfn-argspecs-list
+                (map (fn [[k factory-fn arg-specs :as args]]
+                       [k (arg-specs->deps nil arg-specs)]))
+                (into {}))
+
+        sk (->> kd kahn-sort reverse)]
+    (when (and (not-empty kd)
+               (empty? sk))
+      (throw (ex-info
+              "circular dependency in arg-specs"
+              {:state nil
+               :key-deps kd})))
+    (->> (for [k sk]
+           (get kkfa k))
+         (filter identity))))
+
 (defn system-builder
   "return a system-builder in the Deferred<State> monad which
    will build objects in the state map with build-obj according
@@ -231,7 +275,8 @@
                (bind mv (fn [_]
                           (m-constructor k factory-fn arg-specs)))) )
            (or base-system-builder (new-system))
-           key-factoryfn-argspecs-list)))
+           (toposort-key-factoryfn-argspecs-list
+            key-factoryfn-argspecs-list))))
 
 (defn- system-destructor
   "given a system (including the ::system key) create a

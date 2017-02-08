@@ -65,8 +65,8 @@ a tiny clojure (soon clojurescript too) library for managing systems of interdep
 - `factory-fns` return either just an `object` or a pair of `[object destructor-fn]`, or a `promise`/`Deferred` of the same
 - `factory-fns` can be asynchronous - just return a `Deferred`/`promise` of the `object` or `[object destructor-fn]` pair
 - `system-builder`s are created with a list of `object-specs` which are `[key factory-fn arg-specs]` and specify all the information a `system-builder` needs to create an `object`
-- a `system-builder`s `object-specs` must be ordered to respect the dependencies implied by the `arg-specs` - no automatic dependency resolution is yet attempted
-- `system-builder`s iterate over their `object-specs` in order, extracting args from the current system-map according to `arg-specs`, building an `object` with `factory-fn` and storing the `object` in the system map against `key`
+- a `system-builder`s `object-specs` will be sorted to respect the dependencies implied by the `arg-specs` - but circular dependencies will cause an error
+- `system-builder`s iterate over their `object-specs` in dependency (partial-)order, extracting args from the current system-map according to `arg-specs`, building an `object` with `factory-fn` and storing the `object` in the system map against `key`
 - `system builders` can be composed
 - `start-system!` takes a `system-builder` and a map of `config` and returns a `promise`/`Deferred` of a system, making synchronisation trivial
 - errors during a `start-system!` cause the operation to be unwound, calling `destructor-fns` for already constructed objects

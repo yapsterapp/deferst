@@ -62,12 +62,14 @@
 
 (deftest bad-arg-specs-throw
   (let [destructor-vals (atom [])
-        ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])
-        sb (s/system-builder [[:a ff :foo]])]
+        ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])]
 
     (testing "an error is thrown describing the bad arg specs"
       (is (thrown? clojure.lang.ExceptionInfo
-                   @(s/start-system! sb {:foo 10}))))))
+                   (s/system-builder [[:a ff :foo]])
+                   ;; arg-specs throws on toposort now
+                   ;;@(s/start-system! sb {:foo 10})
+                   )))))
 
 (deftest single-item-system-without-destructors
   (let [sb (s/system-builder [[:a identity {:a-arg [:foo]}]])
@@ -111,6 +113,33 @@
       (is (= @destructor-vals
              [{:b-arg 10}
               {:a-arg 10}])))))
+
+(deftest dependent-item-system-specified-out-of-order
+  (let [destructor-vals (atom [])
+        ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])
+        sb (s/system-builder [[:b ff {:b-arg [:a :a-arg]}]
+                              [:a ff {:a-arg [:foo]}]])
+        sys (s/start-system! sb {:foo 10})
+        _ (s/stop-system! sys)]
+
+    (testing "dependent items are created"
+      (is (= @(s/system-map sys)
+             {:foo 10
+              :a {:a-arg 10}
+              :b {:b-arg 10}})))
+
+    (testing "dependent items were destroyed"
+      (is (= @destructor-vals
+             [{:b-arg 10}
+              {:a-arg 10}])))))
+
+(deftest dependent-item-system-with-circular-deps
+  (let [ff (fn [v] v)]
+    (is (thrown-with-msg?
+         clojure.lang.ExceptionInfo
+         #"circular dependency"
+         (s/system-builder [[:a ff {:a-arg [:b :b-arg]}]
+                            [:b ff {:b-arg [:a :a-arg]}]])))))
 
 (deftest dependent-item-system-with-vector-arg-specs
   (let [destructor-vals (atom [])

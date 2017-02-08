@@ -65,18 +65,22 @@
         stop-name (make-name base-name "stop!")
         reload-name (make-name base-name "reload!")]
     `(do
-       (def ~name (create-system
-                   ~builder
-                   ~default-conf
-                   (symbol (name (ns-name *ns*)) (name '~name))))
+       (defonce ~name (deferst/create-system
+                       ~builder
+                       ~default-conf
+                       (symbol (name (ns-name *ns*)) (name '~name))))
        (defn ~start-name
-         ([] (start! ~name))
-         ([conf#] (start! ~name conf#)))
-       (defn ~system-map-name [] (system-map ~name))
-       (defn ~stop-name [] (stop! ~name))
+         ([] (deferst/start! ~name))
+         ([conf#] (deferst/start! ~name conf#)))
+       (defn ~system-map-name [] (deferst/system-map ~name))
+       (defn ~stop-name [] (deferst/stop! ~name))
        (defn ~reload-name []
-         (stop! ~name)
-         (tn/refresh :after (symbol (name (ns-name *ns*)) (name '~start-name)))))))
+         (deferst/stop! ~name)
+         (tn/refresh
+          :after
+          (symbol
+           (name (ns-name *ns*))
+           (name '~start-name)))))))
 
 (defmacro defsystem
   "macro which defs some vars around a system and provides

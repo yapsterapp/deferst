@@ -248,21 +248,23 @@
             dks)))
 
 (defn stop-system!
-  "given a Deferred<[_, system]> stop the system, running
+  "given a Deferred<[_, system]> (i.e. the result of one of the
+   config-ctx value fns) stop the system, running
    destructor functions in reverse order to object construction"
   [dsys]
-  (with-context dm/deferred-context
-    (bind dsys
-          (fn [[_ system]]
-            (let [sd (system-destructor system)]
-              (run-state sd system))))))
+  (d/chain
+   dsys
+   (fn [[_ system]]
+     (let [sd (system-destructor system)]
+       (run-state sd system)))))
 
 (defn start-system!
   "given a system-builder, start a system with the seed config
    returns a Deferred<[system-map, system]>. if an Exception
    is thrown somewhere, unwind the system construction and
    call destructor functions for the objects which have so
-   far been constructed"
+   far been constructed.
+   returns a Deferred<[_, system]>"
   [system-builder seed]
   (-> (run-state system-builder seed)
       (d/catch
@@ -287,13 +289,14 @@
                             :error e})))))))))
 
 (defn system-map
-  "given a Deferred<[system-map, system]> extract the system-map
-  to a Deferred<system-map>"
-  [sys]
-  (with-context dm/deferred-context
-    (bind sys
-          (fn [[sm _]]
-            (return sm)))))
+  "given the result of a config-ctx value fn,
+   a Deferred<[system-map, system]>, extract the system-map
+   returning a Deferred<system-map>"
+  [dsys]
+  (d/chain
+   dsys
+   (fn [[_ system]]
+     (filter-system-map system))))
 
 (comment
   (require '[deferst.system :as dfs])

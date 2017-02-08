@@ -116,7 +116,7 @@
   [obj]
   (d/deferred? obj))
 
-(defn construct-maybe-lift
+(defn- construct-maybe-lift
   "construct an object given a factory-fn and args. if the
    object is already Deferred lift it into the config-ctx,
    otherwise wrap it"
@@ -132,7 +132,7 @@
                         {:state st
                          :error e}))))))
 
-(defn construct-obj
+(defn- construct-obj
   [factory-fn arg-specs]
   (with-context config-ctx
     (mlet
@@ -144,7 +144,7 @@
                                    [obj-and-maybe-destructor-fn])]]
       (return [obj destructor-fn deps]))))
 
-(defn destroy-maybe-lift
+(defn- destroy-maybe-lift
   [st destructor-fn]
   (with-context config-ctx
     (try
@@ -158,7 +158,7 @@
                         {:state st
                          :error e}))))))
 
-(defn m-destructor
+(defn- m-destructor
   "returns a monadic value which destroys key
    k and removes it from the system state"
   [k destructor-fn]
@@ -186,7 +186,7 @@
       (return
        (filter-system-map new-st)))))
 
-(defn m-constructor
+(defn- m-constructor
   "returns a monadic value which creates key k,
    and adds it to the system state"
   [k factory-fn arg-specs]
@@ -233,7 +233,7 @@
            (or base-system-builder (new-system))
            key-factoryfn-argspecs-list)))
 
-(defn system-destructor
+(defn- system-destructor
   "given a system (including the ::system key) create a
    system-destructor which will apply the individual object
    destructors for all the objects in the system in

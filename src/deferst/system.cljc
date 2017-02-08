@@ -17,6 +17,8 @@
   (:import
    [cats.labs.state State]))
 
+;; the monad context - the monadic values are
+;; (fn [state :- SystemStateSchema] :- Deferred<[Any SystemStateSchema]>)
 (def ^:private config-ctx (state-t cats.labs.manifold/deferred-context))
 
 (def ^:private SystemStateSchema

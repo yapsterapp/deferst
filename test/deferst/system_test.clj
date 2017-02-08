@@ -3,7 +3,8 @@
    [clojure.pprint :refer [pprint]]
    [clojure.set :as set]
    [schema.test]
-   [clojure.test :as test :refer [deftest is are testing use-fixtures]]
+   [clojure.test :as test
+    :refer [deftest is are testing use-fixtures]]
    [manifold.deferred :as d]
    [deferst.system :as s]))
 
@@ -23,8 +24,8 @@
         sys (s/start-system! sb {:foo 10})
         _ (s/stop-system! sys)]
 
-    (testing "null system is stopped"
-      (is (= (-> sys deref last :config/destroyed deref)
+    (testing "null system has no managed objects"
+      (is (= (-> sys deref last :s/system empty?)
              true)))))
 
 (deftest single-item-system
@@ -47,8 +48,7 @@
   (let [destructor-vals (atom [])
         ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])
         sb (s/system-builder [[:a ff [:foo]]])
-        sys (s/start-system! sb {:foo 10})
-        _ (s/stop-system! sys)]
+        sys (s/start-system! sb {:foo 10})]
 
     (testing "single item system has the single object"
       (is (= @(s/system-map sys)
@@ -56,6 +56,7 @@
               :a 10})))
 
     (testing "single item was destroyed"
+      @(s/stop-system! sys)
       (is (= @destructor-vals
              [10])))))
 
@@ -156,7 +157,7 @@
         sb2 (s/system-builder sb [[:c ff {:c-a [:a :a-arg]
                                           :c-b [:b :b-arg]}]])
         sys (s/start-system! sb2 {:foo 10})
-        _ (s/stop-system! sys)]
+        ]
 
     (testing "items are created"
       (is (= @(s/system-map sys)
@@ -166,6 +167,7 @@
               :c {:c-a 10 :c-b 10}})))
 
     (testing "items were destroyed"
+      @(s/stop-system! sys)
       (is (= @destructor-vals
              [{:c-a 10 :c-b 10}
               {:a-arg 10}])))))
@@ -179,9 +181,7 @@
         sys (s/start-system! sb {:foo 10})]
     (testing "system is unwound"
       (is (= @destructor-vals [{:a-arg 10}]))
-      (is (= (-> (d/error-value sys nil)
-                 ex-data
-                 :state
-                 :config/destroyed
-                 deref)
-             true)))))
+      (is (thrown-with-msg?
+           clojure.lang.ExceptionInfo
+           #"start-system! failed and unwound"
+           @sys)))))

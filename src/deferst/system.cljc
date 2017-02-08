@@ -101,7 +101,7 @@
 
     (vector? arg-specs)
     [(get-in st arg-specs)
-     (first arg-specs)]
+     #{(first arg-specs)}]
 
     :else
     (throw
@@ -146,7 +146,8 @@
   [st destructor-fn]
   (with-context config-ctx
     (try
-      (let [r (destructor-fn)]
+      (let [r (when destructor-fn
+                (destructor-fn))]
         (if (is-promise? r)
           (lift config-ctx r)
           (return r)))
@@ -267,11 +268,13 @@
       (d/catch
           Exception
           (fn [e]
+            ;; (prn "FAILED" e)
             (let [{st :state :as xd} (ex-data e)
+                  _ (prn "FAILED STATE" st)
                   sd (system-destructor st)]
               (d/chain
                (d/catch
-                   (run-state sd sd)
+                   (run-state sd st)
                    Exception
                    (fn [ue]
                      (throw

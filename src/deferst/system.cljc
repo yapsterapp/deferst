@@ -249,6 +249,11 @@
             (return config-ctx system)
             dks)))
 
+(defn- stop-system*
+  [system]
+  (let [sd (system-destructor system)]
+    (run-state sd system)))
+
 (defn stop-system!
   "given a Deferred<[_, system]> (i.e. the result of one of the
    config-ctx value fns) stop the system, running
@@ -257,8 +262,7 @@
   (d/chain
    dsys
    (fn [[_ system]]
-     (let [sd (system-destructor system)]
-       (run-state sd system)))))
+     (stop-system* system))))
 
 (defn start-system!
   "given a system-builder, start a system with the seed config
@@ -289,6 +293,9 @@
                   (ex-info "start-system! failed and unwound"
                            {:state st
                             :error e})))))))))
+(defn- system-map*
+  [system]
+  (filter-system-map system))
 
 (defn system-map
   "given the result of a config-ctx value fn,
@@ -298,7 +305,7 @@
   (d/chain
    dsys
    (fn [[_ system]]
-     (filter-system-map system))))
+     (system-map* system))))
 
 (comment
   (require '[deferst.system :as dfs])

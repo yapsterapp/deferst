@@ -18,7 +18,7 @@
   :dependencies [[org.clojure/tools.namespace "0.2.11"]
                  [prismatic/plumbing "0.5.3"]
                  [funcool/cats "2.0.0"]
-                 [funcool/promesa "1.4.0"]
+                 [funcool/promesa "1.7.0"]
                  [manifold "0.1.5"]]
 
   :plugins [[s3-wagon-private "1.2.0"

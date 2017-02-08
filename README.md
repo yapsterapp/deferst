@@ -4,6 +4,10 @@
 
 a tiny clojure (soon clojurescript too) library for managing systems of interdependent objects. it's async friendly, and it won't infect your codebase
 
+## Install
+
+[![Clojars Project](https://img.shields.io/clojars/v/employeerepublic/deferst.svg)](https://clojars.org/employeerepublic/deferst)
+
 ## Usage
 
 ``` clojure

@@ -86,11 +86,11 @@
   "macro which defs some vars around a system and provides
    easy tools-namespace reloading. you get
 
-   <name> - the Sys record
-   <name>-start! - start the system, with optional config
-   <name>-stop! - stop the system if running
-   <name>-reload! - stop!, tools.namespace refresh, start!"
+   <base-name>-sys - the Sys record
+   <base-name>-start! - start the system, with optional config
+   <base-name>-stop! - stop the system if running
+   <base-name>-reload! - stop!, tools.namespace refresh, start!"
   ([builder default-conf]
    (defsystem* nil builder default-conf))
-  ([name builder default-conf]
-   (defsystem* name builder default-conf)))
+  ([base-name builder default-conf]
+   (defsystem* base-name builder default-conf)))

@@ -15,13 +15,16 @@ a tiny clojure (soon clojurescript too) library for managing systems of interdep
 ;; argument and return an object, or an
 ;; [object, 0-args-destructor-fn], or a promise thereof
 
+(require 'manifold.deferred)
 (defn create-db-connection [{:keys [host port]}]
-  ;; this might take a while, so let's do it async
+  ;; pretend this might take a while, so let's do it async
   (manifold.deferred/future
-    (let [conn (db/create-connection host port)]
-      [conn (fn [] (db/close conn))])))
+    (let [conn {:my-host host :my-port port}]
+      [conn
+       (fn [] (manifold.deferred/future (prn "closing" conn)))])))
 
-(defn create-client [{:keys [dir db]}] (client/create {:dir dir :db db}))
+(defn create-client [{:keys [dir db]}]
+  {:my-dir dir :my-db db})
 
 ;; and here's how to build a system of objects and definte their
 ;; interdependencies
@@ -84,32 +87,31 @@ a tiny clojure (soon clojurescript too) library for managing systems of interdep
 ``` clojure
 ;; another factory-fn
 (defn create-server [{:keys [client port db]}]
-  (let [s (server/create port db client)]
-    [s (fn [] (server/stop s))]))
+  (let [s {:my-port port :my-client client :my-db db}]
+    [s (fn [] (prn "stopping" s))]))
 
 ;; builders can be composed
 (def server-builder (s/system-builder
                       builder
                       [[:server create-server {:port [:config :port]
                                                :db [:db]
-                                               :client :client}]))
+                                               :client :client}]]))
 
 ;; the defsystem sugar is optional
-(def sys (s/start-system!
-            server-builder
-            {:config {:db {:host "localhost" :port 9042}
-                      :dir "/tmp/cache"
-                      :port 8080}}))
+(def server-sys (s/start-system!
+                  server-builder
+                  {:config {:db {:host "localhost" :port 9042}
+                            :dir "/tmp/cache"
+                            :port 8080}}))
 
 ;; get the system-map from the running system
-@(s/system-map sys) ;; => Deferred< {:config ...
-                    ;;               :db     ...
-                    ;;               :client ...
-                    ;;               :server ...} >
+@(s/system-map server-sys) ;; => Deferred< {:config ...
+                           ;;               :db     ...
+                           ;;               :client ...
+                           ;;               :server ...} >
 
 ;; stop the system, calling destructor functions in reverse order
-@(s/stop-system! sys)
-
+@(s/stop-system! server-sys)
 ```
 
 ## Name

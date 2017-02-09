@@ -11,9 +11,9 @@ a tiny clojure (soon clojurescript too) library for managing systems of interdep
 ## Usage
 
 ``` clojure
-;; some object factory functions - they take a single map argument
-;; and return an object, or an [object, 0-args-destructor-fn]
-;; or a promise thereof
+;; some example object factory fns - factory fns take a single map
+;; argument and return an object, or an
+;; [object, 0-args-destructor-fn], or a promise thereof
 
 (defn create-db-connection [{:keys [host port]}]
   ;; this might take a while, so let's do it async
@@ -23,12 +23,16 @@ a tiny clojure (soon clojurescript too) library for managing systems of interdep
 
 (defn create-client [{:keys [dir db]}] (client/create {:dir dir :db db}))
 
+;; and here's how to build a system of objects and definte their
+;; interdependencies
 
 (require '[deferst.system :as s])
 (require '[deferst :as d])
 
 ;; a system builder fn defines a tuple for each
-;; object to be created of [key factory-fn arg-specs]
+;; object to be created of [key factory-fn arg-specs].
+;; args-specs is either a path into the system or a
+;; map of paths into the system
 (def builder (s/system-builder
                [[:db create-db-connection [:config :db]]
                 [:client create-client {:dir [:config :dir]

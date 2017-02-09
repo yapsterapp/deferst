@@ -34,23 +34,8 @@
                      [cats.protocols :as p]
                      [cats.context :as ctx]
                      [cats.data :as d]
-                     [cats.util :as util])))
-
-(in-ns 'cats.protocols)
-
-(defprotocol MonadTrans
-  "A monad transformer abstraction."
-  (-lift [m mv] "Lift a value from the parameterized monad to the transformer."))
-
-(in-ns 'cats.core)
-
-(defn lift
-  "Lift a value from the inner monad of a monad transformer
-  into a value of the monad transformer."
-  ([mv] (p/-lift ctx/*context* mv))
-  ([m mv] (p/-lift m mv)))
-
-(in-ns 'cats.labs.state)
+                     [cats.util :as util]
+                     [cats.labs.monad-trans :as mt])))
 
 (declare context)
 
@@ -201,7 +186,7 @@
                  (p/-mreturn inner-monad
                              (d/pair s (f s))))))
 
-    p/MonadTrans
+    mt/MonadTrans
     (-lift [_ mv]
       (state (fn [s]
                  (p/-mbind inner-monad

@@ -6,11 +6,12 @@
    [cats.data :as data]
    [cats.labs.state
     :refer [state state-t get-state put-state swap-state run-state]]
+   [cats.labs.lift :refer [lift]]
    [deferst.kahn :refer [kahn-sort]]
 
    ;; has to come after state, because of the re-aninated nature
    ;; of monad transformers
-   [cats.core :refer [mlet return bind lift join]]
+   [cats.core :refer [mlet return bind join]]
    #?(:clj [cats.labs.manifold :as dm]
       :cljs [cats.labs.promise :as pm])
    #?(:clj [manifold.deferred :as d]))

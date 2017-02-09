@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/employeerepublic/deferst.svg?branch=master)](https://travis-ci.org/employeerepublic/deferst)
 
-a tiny clojure (soon clojurescript too) library for managing systems of interdependent objects. it's async friendly, and it won't infect your codebase
+a tiny clojure (soon clojurescript too) library for managing systems of interdependent objects. it's non-blocking, and it won't infect your codebase or force you to do anything unnatural
 
 ## Install
 

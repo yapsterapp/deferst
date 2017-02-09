@@ -6,7 +6,7 @@
    [cats.data :as data]
    [cats.labs.state
     :refer [state state-t get-state put-state swap-state run-state]]
-   [cats.labs.lift :refer [lift]]
+   [cats.labs.monad-trans :refer [lift]]
    [deferst.kahn :refer [kahn-sort]]
 
    ;; has to come after state, because of the re-aninated nature

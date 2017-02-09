@@ -47,15 +47,17 @@ a tiny clojure (soon clojurescript too) library for managing systems of interdep
             :dir "/tmp/cache"
             :port 8080}})
 
-;; (start!) returns a promise of the constructed system-map
+;; (start!) returns a promise of the constructed system-map.
+;; call it repeatedly to return the same promise, until
+;; (stop!) is called
 @(start!) ;; => Deferred< {:config ...
           ;;               :db     ...
           ;;               :client ...} >
 
-;; (stop!) returns a promise of the emptied system-map
+;; (stop!) call destructor fns on the objects in the system-map
 @(stop!) ;; destructor fns have been called
 
-;; (reload!) does a tools.namespace reload followed by (start!)
+;; (reload!) does a tools.namespace/refresh followed by (start!)
 @(reload!) ;; => Deferred< {:config ...
            ;;               :db     ...
            ;;               :client ...} >

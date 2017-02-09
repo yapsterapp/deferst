@@ -5,7 +5,7 @@
    [cats.context :refer [with-context]]
    [cats.data :as data]
    [cats.labs.state
-    :refer [state state-t get-state put-state swap-state run-state]]
+    :refer [state state? state-t get-state put-state swap-state run-state]]
    [cats.labs.monad-trans :refer [lift]]
    [deferst.kahn :refer [kahn-sort]]
 
@@ -14,19 +14,25 @@
    [cats.core :refer [mlet return bind join]]
    #?(:clj [cats.labs.manifold :as dm]
       :cljs [cats.labs.promise :as pm])
-   #?(:clj [manifold.deferred :as d]))
-  (:import
-   [cats.labs.state State]))
+   #?(:clj [manifold.deferred :as d]
+      :cljs [promesa.core :as p]))
+
+  #?(:clj
+     (:import
+      [cats.labs.state State]))
+  )
 
 ;; the monad context - the monadic values are
 ;; (fn [state :- SystemStateSchema] :- Deferred<[Any SystemStateSchema]>)
-(def ^:private config-ctx (state-t cats.labs.manifold/deferred-context))
+(def ^:private config-ctx
+  #?(:clj (state-t cats.labs.manifold/deferred-context)
+     :cljs (state-t cats.labs.promise/context)))
 
 (def ^:private SystemStateSchema
   {;; for each key, a map of constructor, destructor config-ctx
    ;; value fns and its dependencies
-   ::system {s/Keyword {:constructor (s/pred #(instance? State %))
-                        :destructor (s/pred #(instance? State %))
+   ::system {s/Keyword {:constructor (s/pred state?)
+                        :destructor (s/pred state?)
                         :deps {s/Keyword #{s/Keyword}}}}
 
    ;; the managed objects
@@ -134,7 +140,8 @@
 
 (defn- is-promise?
   [obj]
-  (d/deferred? obj))
+  #?(:clj (d/deferred? obj)
+     :cljs (p/promise? obj)))
 
 (defn- construct-maybe-lift
   "construct an object given a factory-fn and args. if the
@@ -147,7 +154,7 @@
         (if (is-promise? obj)
           (lift config-ctx obj)
           (return obj)))
-      (catch Exception e
+      (catch #?(:clj Exception :cljs :default) e
         (throw (ex-info "factory-fn threw"
                         {:state st
                          :error e}))))))
@@ -174,7 +181,7 @@
         (if (is-promise? r)
           (lift config-ctx r)
           (return r)))
-      (catch Exception e
+      (catch #?(:clj Exception :cljs :default) e
         (throw (ex-info "destructor-fn threw"
                         {:state st
                          :error e}))))))

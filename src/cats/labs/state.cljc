@@ -29,7 +29,8 @@
                      [cats.protocols :as p]
                      [cats.context :as ctx :include-macros true]
                      [cats.data :as d]
-                     [cats.util :as util])
+                     [cats.util :as util]
+                     [cats.labs.monad-trans :as mt])
      :clj  (:require [cats.core]
                      [cats.protocols :as p]
                      [cats.context :as ctx]

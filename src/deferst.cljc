@@ -1,9 +1,12 @@
 (ns deferst
   (:require
-   [clojure.tools.namespace.repl :as tn]
+   #?(:clj [clojure.tools.namespace.repl :as tn])
    [clojure.string :as str]
-   [deferst.system :as s]
-   [manifold.deferred :as d]))
+   #?(:clj [manifold.deferred :as d]
+      :cljs [promesa.core :as p])
+   #?(:clj [cats.labs.manifold :as dm]
+      :cljs [cats.labs.promise :as pm])
+   [deferst.system :as s]))
 
 (defprotocol ISys
   (start! [_] [_ conf])

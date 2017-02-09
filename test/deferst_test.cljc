@@ -1,9 +1,14 @@
 (ns deferst-test
   (:require
-   [clojure.pprint :refer [pprint]]
+   #?(:cljs [cljs.test :as t
+             :refer [deftest is are testing use-fixtures]]
+      :clj [clojure.test :as t
+            :refer [deftest is are testing use-fixtures]])
+
+   #?(:cljs [deferst.system-test])
+
    [clojure.set :as set]
    [schema.test]
-   [clojure.test :as test :refer [deftest is are testing use-fixtures]]
    [deferst.system :as s]
    [deferst :as d]))
 
@@ -34,3 +39,16 @@
       (is (= @(d/start! sys {:foo 20})
              {:foo 20
               :a {:a-arg 20}})))))
+
+;; --- Entry Point
+
+#?(:cljs (enable-console-print!))
+#?(:cljs (set! *main-cli-fn* #(t/run-tests
+                               *ns*
+                               'deferst.system-test)))
+#?(:cljs
+   (defmethod t/report [:cljs.test/default :end-run-tests]
+     [m]
+     (if (t/successful? m)
+       (set! (.-exitCode js/process) 0)
+       (set! (.-exitCode js/process) 1))))

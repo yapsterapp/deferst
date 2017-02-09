@@ -1,11 +1,17 @@
 (ns deferst.system-test
   (:require
-   [clojure.pprint :refer [pprint]]
+
+   #?(:cljs [cljs.test :as t
+             :refer [deftest is are testing use-fixtures]]
+      :clj [clojure.test :as t
+            :refer [deftest is are testing use-fixtures]])
+
    [clojure.set :as set]
    [schema.test]
-   [clojure.test :as test
-    :refer [deftest is are testing use-fixtures]]
-   [manifold.deferred :as d]
+
+   #?(:clj [manifold.deferred :as d]
+      :cljs [promesa.core :as p])
+
    [deferst.system :as s]))
 
 ;; check schemas

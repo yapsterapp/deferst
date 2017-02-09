@@ -1,4 +1,4 @@
-(ns deferst.system-test
+(ns deferst-test
   (:require
    [clojure.pprint :refer [pprint]]
    [clojure.set :as set]
@@ -26,9 +26,9 @@
              {:foo 10
               :a {:a-arg 10}})))
 
-    (testing "simple system stops"
+    (testing "simple system stops and returns a promise of the config"
       (is (= @(d/stop! sys)
-             true)))
+             {:foo 10})))
 
     (testing "start! returns new system map when restarted"
       (is (= @(d/start! sys {:foo 20})

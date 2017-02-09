@@ -36,7 +36,10 @@
            (reset! r (s/stop-system! sys))
            nil)))
       (if @r
-        @r
+        (d/chain
+         @r
+         (fn [st-fn-r]
+           (first st-fn-r)))
         (d/success-deferred nil))))
 
   (system-map [_]

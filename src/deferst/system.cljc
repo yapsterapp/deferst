@@ -312,10 +312,11 @@
    config-ctx value fns) stop the system, running
    destructor functions in reverse order to object construction"
   [dsys]
-  (d/chain
-   dsys
-   (fn [[_ system]]
-     (stop-system* system))))
+  #?(:clj
+     (d/chain
+      dsys
+      (fn [[_ system]]
+        (stop-system* system)))))
 
 (defn start-system!
   "given a system-builder, start a system with the seed config
@@ -325,27 +326,28 @@
    far been constructed.
    returns a Deferred<[_, system]>"
   [system-builder seed]
-  (-> (run-state system-builder seed)
-      (d/catch
-          Exception
-          (fn [e]
-            (let [{st :state :as xd} (ex-data e)
-                  sd (system-destructor st)]
-              (d/chain
-               (d/catch
-                   (run-state sd st)
-                   Exception
-                   (fn [ue]
-                     (throw
-                      (ex-info "unwind failed after start-system! failed"
-                               {:state st
-                                :error e
-                                :unwind-error ue}))))
-               (fn [_]
-                 (throw
-                  (ex-info "start-system! failed and unwound"
-                           {:state st
-                            :error e})))))))))
+  #?(:clj
+     (-> (run-state system-builder seed)
+         (d/catch
+             Exception
+             (fn [e]
+               (let [{st :state :as xd} (ex-data e)
+                     sd (system-destructor st)]
+                 (d/chain
+                  (d/catch
+                      (run-state sd st)
+                      Exception
+                    (fn [ue]
+                      (throw
+                       (ex-info "unwind failed after start-system! failed"
+                                {:state st
+                                 :error e
+                                 :unwind-error ue}))))
+                  (fn [_]
+                    (throw
+                     (ex-info "start-system! failed and unwound"
+                              {:state st
+                               :error e}))))))))))
 (defn- system-map*
   [system]
   (filter-system-map system))
@@ -355,10 +357,11 @@
    a Deferred<[system-map, system]>, extract the system-map
    returning a Deferred<system-map>"
   [dsys]
-  (d/chain
-   dsys
-   (fn [[_ system]]
-     (system-map* system))))
+  #?(:clj
+     (d/chain
+      dsys
+      (fn [[_ system]]
+        (system-map* system)))))
 
 (comment
   (require '[deferst.system :as dfs])

@@ -98,20 +98,21 @@ a tiny clojure (soon clojurescript too) library for managing systems of interdep
                                                :client :client}]]))
 
 ;; the defsystem sugar is optional
-(def server-sys (s/start-system!
+(def server-sys (d/create-system
                   server-builder
                   {:config {:db {:host "localhost" :port 9042}
                             :dir "/tmp/cache"
                             :port 8080}}))
 
-;; get the system-map from the running system
-@(s/system-map server-sys) ;; => Deferred< {:config ...
-                           ;;               :db     ...
-                           ;;               :client ...
-                           ;;               :server ...} >
+;; start the system
+@(d/start! server-sys) ;; => Deferred< {:config ...
+                       ;;               :db     ...
+                       ;;               :client ...
+                       ;;               :server ...} >
 
-;; stop the system, calling destructor functions in reverse order
-@(s/stop-system! server-sys)
+
+;; stop the system
+@(d/stop! server-sys)
 ```
 
 ## Name

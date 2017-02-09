@@ -29,10 +29,11 @@ a tiny clojure (soon clojurescript too) library for managing systems of interdep
 (require '[deferst.system :as s])
 (require '[deferst :as d])
 
-;; a system builder fn defines a tuple for each
+;; a system builder requires a tuple for each
 ;; object to be created of [key factory-fn arg-specs].
 ;; args-specs is either a path into the system or a
-;; map of paths into the system
+;; map of paths into the system. system builders are
+;; fns of config which build a system of objects
 (def builder (s/system-builder
                [[:db create-db-connection [:config :db]]
                 [:client create-client {:dir [:config :dir]

@@ -15,12 +15,7 @@
    #?(:clj [cats.labs.manifold :as dm]
       :cljs [cats.labs.promise :as pm])
    #?(:clj [manifold.deferred :as d]
-      :cljs [promesa.core :as p]))
-
-  #?(:clj
-     (:import
-      [cats.labs.state State]))
-  )
+      :cljs [promesa.core :as p])))
 
 ;; the monad context - the monadic values are
 ;; (fn [state :- SystemStateSchema] :- Deferred<[Any SystemStateSchema]>)

@@ -2,7 +2,8 @@
   (:require
    [clojure.tools.namespace.repl :as tn]
    [clojure.string :as str]
-   [deferst.system :as s]))
+   [deferst.system :as s]
+   [manifold.deferred :as d]))
 
 (defprotocol ISys
   (start! [_] [_ conf])
@@ -32,9 +33,11 @@
        (fn [sys]
          (when sys
            (when label (println "stopping: " label))
-           (reset! r (s/stop-system! @sys-atom))
+           (reset! r (s/stop-system! sys))
            nil)))
-      @r))
+      (if @r
+        @r
+        (d/success-deferred nil))))
 
   (system-map [_]
     (s/system-map @sys-atom)))
@@ -65,7 +68,7 @@
         stop-name (make-name base-name "stop!")
         reload-name (make-name base-name "reload!")]
     `(do
-       (defonce ~name (deferst/create-system
+       (def ~name (deferst/create-system
                        ~builder
                        ~default-conf
                        (symbol (name (ns-name *ns*)) (name '~name))))

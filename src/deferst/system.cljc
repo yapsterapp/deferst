@@ -311,7 +311,12 @@
      (d/chain
       dsys
       (fn [[_ system]]
-        (stop-system* system)))))
+        (stop-system* system)))
+
+     :cljs
+     (p/then
+      dsys
+      (fn [[_ system]] (stop-system* system)))))
 
 (defn start-system!
   "given a system-builder, start a system with the seed config
@@ -342,7 +347,10 @@
                     (throw
                      (ex-info "start-system! failed and unwound"
                               {:state st
-                               :error e}))))))))))
+                               :error e}))))))))
+
+     :cljs
+     (-> (run-state system-builder seed))))
 (defn- system-map*
   [system]
   (filter-system-map system))
@@ -356,7 +364,12 @@
      (d/chain
       dsys
       (fn [[_ system]]
-        (system-map* system)))))
+        (system-map* system)))
+
+     :cljs
+     (p/then
+      dsys
+      (fn [[_ system]] (system-map* system)))))
 
 (comment
   (require '[deferst.system :as dfs])

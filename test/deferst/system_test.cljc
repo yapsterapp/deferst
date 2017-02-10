@@ -370,12 +370,23 @@
         boom (fn [v] (throw (ex-info "boom" {:boom true})))
         sb (s/system-builder [[:a ff {:a-arg [:foo]}]
                               [:b boom {:b-arg [:a :a-arg]}]])
-        sys (s/start-system! sb {:foo 10})]
+        sys (s/start-system! sb {:foo 10})
+        x-dvals [{:a-arg 10}]]
     (testing "system is unwound"
       #?(:clj
          (do
-           (is (= @destructor-vals [{:a-arg 10}]))
+           (is (= @destructor-vals x-dvals))
            (is (thrown-with-msg?
                 clojure.lang.ExceptionInfo
                 #"start-system! failed and unwound"
-                @sys)))))))
+                @sys)))
+
+         :cljs
+         (do
+           (t/async
+            done
+            (p/catch
+                sys
+                (fn [e]
+                  (is (= @destructor-vals x-dvals))
+                  (prn r)))))))))

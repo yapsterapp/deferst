@@ -5,7 +5,7 @@
 (let [start (System/nanoTime)]
   (b/build
    (b/inputs "assets" "test" "src")
-   {:main 'deferst-test
+   {:main 'deferst.core-test
     :output-to "out/tests.js"
     :output-dir "out/tests"
     :target :nodejs

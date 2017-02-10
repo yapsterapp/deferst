@@ -1,4 +1,4 @@
-(ns deferst
+(ns deferst.core
   (:require
    #?(:clj [clojure.tools.namespace.repl :as tn])
    [clojure.string :as str]

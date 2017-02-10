@@ -1,4 +1,4 @@
-(ns deferst-test
+(ns deferst.core-test
   (:require
    #?(:cljs [cljs.test :as t
              :refer [deftest is are testing use-fixtures]]
@@ -10,7 +10,7 @@
    [clojure.set :as set]
    [schema.test]
    [deferst.system :as s]
-   [deferst :as d]))
+   [deferst.core :as d]))
 
 (deftest simple-sys
   (let [sb (s/system-builder [[:a identity {:a-arg [:foo]}]])
@@ -49,7 +49,7 @@
 
 #?(:cljs (enable-console-print!))
 #?(:cljs (set! *main-cli-fn* #(t/run-tests
-                               *ns*
+                               'deferst.core-test
                                'deferst.system-test)))
 #?(:cljs
    (defmethod t/report [:cljs.test/default :end-run-tests]

@@ -230,29 +230,41 @@
                               [:a ff {:a-arg [:foo]}]])
         sys (s/start-system! sb {:foo 10})
         sysmap (s/system-map sys)
-        stop-sys (s/stop-system! sys)]
+        stop-sys (s/stop-system! sys)
+        x-sysmap {:foo 10 :a {:a-arg 10} :b {:b-arg 10}}
+        x-dvals [{:b-arg 10} {:a-arg 10}]]
 
     (testing "dependent items are created"
       #?(:clj
-         (is (= @(s/system-map sys)
-                {:foo 10
-                 :a {:a-arg 10}
-                 :b {:b-arg 10}}))))
+         (is (= @sysmap x-sysmap))
+
+         :cljs
+         (t/async
+          done
+          (p/then
+           sysmap
+           (fn [v] (is (= v x-sysmap))
+             (done))))))
 
     (testing "dependent items were destroyed"
       #?(:clj
-         (is (= @destructor-vals
-                [{:b-arg 10}
-                 {:a-arg 10}]))))))
+         (is (= @destructor-vals x-dvals))
+
+         :cljs
+         (t/async
+          done
+          (p/then
+           stop-sys
+           (fn [_] (is (= @destructor-vals x-dvals))
+             (done))))))))
 
 (deftest dependent-item-system-with-circular-deps
   (let [ff (fn [v] v)]
-    #?(:clj
-       (is (thrown-with-msg?
-            clojure.lang.ExceptionInfo
-            #"circular dependency"
-            (s/system-builder [[:a ff {:a-arg [:b :b-arg]}]
-                               [:b ff {:b-arg [:a :a-arg]}]]))))))
+    (is (thrown-with-msg?
+         #?(:clj clojure.lang.ExceptionInfo :cljs :default)
+         #"circular dependency"
+         (s/system-builder [[:a ff {:a-arg [:b :b-arg]}]
+                            [:b ff {:b-arg [:a :a-arg]}]])))))
 
 (deftest dependent-item-system-with-vector-arg-specs
   (let [destructor-vals (atom [])
@@ -261,20 +273,34 @@
                               [:b ff {:b-arg [:a]}]])
         sys (s/start-system! sb {:foo 10})
         sysmap (s/system-map sys)
-        stop-sys (s/stop-system! sys)]
+        stop-sys (s/stop-system! sys)
+        x-sysmap {:foo 10 :a 10 :b {:b-arg 10}}
+        x-dvals [{:b-arg 10} 10]]
 
     (testing "dependent items are created"
       #?(:clj
-         (is (= @(s/system-map sys)
-                {:foo 10
-                 :a 10
-                 :b {:b-arg 10}}))))
+         (is (= @sysmap
+                x-sysmap))
+
+         :cljs
+         (t/async
+          done
+          (p/then
+           sysmap
+           (fn [v] (is (= v x-sysmap))
+             (done))))))
 
     (testing "dependent items were destroyed"
       #?(:clj
-         (is (= @destructor-vals
-                [{:b-arg 10}
-                 10]))))))
+         (is (= @destructor-vals x-dvals))
+
+         :cljs
+         (t/async
+          done
+          (p/then
+           stop-sys
+           (fn [_] (is (= @destructor-vals x-dvals))
+             (done))))))))
 
 (deftest dependent-item-system-with-mixed-destructors
   (let [destructor-vals (atom [])
@@ -283,19 +309,33 @@
                               [:b ff {:b-arg [:a :a-arg]}]])
         sys (s/start-system! sb {:foo 10})
         sysmap (s/system-map sys)
-        stop-sys (s/stop-system! sys)]
+        stop-sys (s/stop-system! sys)
+        x-sysmap {:foo 10 :a {:a-arg 10} :b {:b-arg 10}}
+        x-dvals [{:b-arg 10}]]
 
     (testing "dependent items are created"
       #?(:clj
-         (is (= @(s/system-map sys)
-                {:foo 10
-                 :a {:a-arg 10}
-                 :b {:b-arg 10}}))))
+         (is (= @sysmap x-sysmap))
+
+         :cljs
+         (t/async
+          done
+          (p/then
+           sysmap
+           (fn [v] (is (= v x-sysmap))
+             (done))))))
 
     (testing "dependent items were destroyed"
       #?(:clj
-         (is (= @destructor-vals
-                [{:b-arg 10}]))))))
+         (is (= @destructor-vals x-dvals))
+
+         :cljs
+         (t/async
+          done
+          (p/then
+           stop-sys
+           (fn [_] (is (= @destructor-vals x-dvals))
+             (done))))))))
 
 (deftest composed-builders
   (let [destructor-vals (atom [])

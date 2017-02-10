@@ -39,11 +39,9 @@
            (reset! r (s/stop-system! sys))
            nil)))
       (if @r
-        (d/chain
-         @r
-         (fn [st-fn-r]
-           (first st-fn-r)))
-        (d/success-deferred nil))))
+        (s/system-map @r)
+        #?(:clj (d/success-deferred nil)
+           :cljs (p/promise nil)))))
 
   (system-map [_]
     (s/system-map @sys-atom)))

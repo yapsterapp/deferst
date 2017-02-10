@@ -15,15 +15,24 @@
    [deferst.system :as s]))
 
 ;; check schemas
-(use-fixtures :once schema.test/validate-schemas)
+#?(:clj
+   (use-fixtures :once schema.test/validate-schemas))
 
 (deftest empty-system
   (let [sb (s/system-builder [])
         sys (s/start-system! sb {:foo 10})]
 
     (testing "null system contains config"
-      (is (= @(s/system-map sys)
-             {:foo 10})))))
+      #?(:clj (is (= (first @sys) {:foo 10}))
+
+         :cljs
+         (t/async
+          done
+          (p/then
+           sys
+           (fn [v]
+             (t/is (= (first v) {:foo 10}))
+             (done))))))))
 
 (deftest empty-system-stops
   (let [sb (s/system-builder [])
@@ -31,8 +40,20 @@
         _ (s/stop-system! sys)]
 
     (testing "null system has no managed objects"
-      (is (= (-> sys deref last :s/system empty?)
-             true)))))
+      #?(:clj
+         (do
+           (is (contains? (-> sys deref last) :deferst.system/system))
+           (is (empty? (-> sys deref last :deferst.system/system))))
+
+         :cljs
+         (t/async
+          done
+          (p/then
+           sys
+           (fn [v]
+             (is (contains? (-> v last) :deferst.system/system))
+             (is (empty? (-> v last :deferst.system/system)))
+             (done))))))))
 
 (deftest single-item-system
   (let [destructor-vals (atom [])

@@ -147,7 +147,7 @@
         sysmap (s/system-map sys)
         stop-sys (s/stop-system! sys)
         x-sysmap {:foo 10
-                :a {:a-arg 10}}]
+                  :a {:a-arg 10}}]
 
     (testing "single item system has the single object"
       #?(:clj
@@ -337,18 +337,20 @@
            (fn [_] (is (= @destructor-vals x-dvals))
              (done))))))))
 
-(deftest composed-builders
+(deftest composed-builders-creation
   (let [destructor-vals (atom [])
         ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])
-        sb (s/system-builder [[:a ff {:a-arg [:foo]}]
-                              [:b identity {:b-arg [:a :a-arg]}]])
-        sb2 (s/system-builder sb [[:c ff {:c-a [:a :a-arg]
-                                          :c-b [:b :b-arg]}]])
-        sys (s/start-system! sb2 {:foo 10})
-        sysmap (s/system-map sys)
-        stop-sys (s/stop-system! sys)
+        sb-obj-specs [[:a ff {:a-arg [:foo]}]
+                      [:b identity {:b-arg [:a :a-arg]}]]
+        sb2-obj-specs [[:c ff {:c-a [:a :a-arg]
+                               :c-b [:b :b-arg]}]]
         x-sysmap {:foo 10 :a {:a-arg 10} :b {:b-arg 10} :c {:c-a 10 :c-b 10}}
-        x-dvals [{:c-a 10 :c-b 10} {:a-arg 10}]]
+        x-dvals [{:c-a 10 :c-b 10} {:a-arg 10}]
+
+        sb (s/system-builder sb-obj-specs)
+        sb2 (s/system-builder sb sb2-obj-specs)
+        sys (s/start-system! sb2 {:foo 10})
+        sysmap (s/system-map sys)]
 
     (testing "items are created"
       #?(:clj
@@ -360,7 +362,21 @@
           (p/then
            sysmap
            (fn [v] (is (= v x-sysmap))
-             (done))))))
+             (done))))))))
+
+(deftest composed-builders-destruction
+  (let [destructor-vals (atom [])
+        ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])
+
+        sb (s/system-builder [[:a ff {:a-arg [:foo]}]
+                              [:b identity {:b-arg [:a :a-arg]}]])
+        sb2 (s/system-builder sb [[:c ff {:c-a [:a :a-arg]
+                                          :c-b [:b :b-arg]}]])
+        sys (s/start-system! sb2 {:foo 10})
+        stop-sys (s/stop-system! sys)
+
+        x-sysmap {:foo 10 :a {:a-arg 10} :b {:b-arg 10} :c {:c-a 10 :c-b 10}}
+        x-dvals [{:c-a 10 :c-b 10} {:a-arg 10}]]
 
     (testing "items were destroyed"
       #?(:clj

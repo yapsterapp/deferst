@@ -17,28 +17,33 @@
         sys (d/create-system sb {:foo 10})]
 
     (testing "simple system starts"
-      (is (= @(d/start! sys)
-             {:foo 10
-              :a {:a-arg 10}})))
+      #?(:clj
+         (is (= @(d/start! sys)
+                {:foo 10
+                 :a {:a-arg 10}}))))
 
     (testing "simple system returns system map"
-      (is (= @(d/system-map sys)
-             {:foo 10
-              :a {:a-arg 10}})))
+      #?(:clj
+         (is (= @(d/system-map sys)
+                {:foo 10
+                 :a {:a-arg 10}}))))
 
     (testing "start! returns same system map if already started"
-      (is (= @(d/start! sys {:foo 20})
-             {:foo 10
-              :a {:a-arg 10}})))
+      #?(:clj
+         (is (= @(d/start! sys {:foo 20})
+                {:foo 10
+                 :a {:a-arg 10}}))))
 
     (testing "simple system stops and returns a promise of the config"
-      (is (= @(d/stop! sys)
-             {:foo 10})))
+      #?(:clj
+         (is (= @(d/stop! sys)
+                {:foo 10}))))
 
     (testing "start! returns new system map when restarted"
-      (is (= @(d/start! sys {:foo 20})
-             {:foo 20
-              :a {:a-arg 20}})))))
+      #?(:clj
+         (is (= @(d/start! sys {:foo 20})
+                {:foo 20
+                 :a {:a-arg 20}}))))))
 
 ;; --- Entry Point
 

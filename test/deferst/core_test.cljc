@@ -17,33 +17,34 @@
         sys (d/create-system sb {:foo 10})]
 
     (testing "simple system starts"
-      #?(:clj
-         (is (= @(d/start! sys)
-                {:foo 10
-                 :a {:a-arg 10}}))))
+      (let [sysmap (d/start! sys)
+            x-sysmap {:foo 10 :a {:a-arg 10}}]
+        #?(:clj
+           (is (= @sysmap x-sysmap)))))
 
     (testing "simple system returns system map"
-      #?(:clj
-         (is (= @(d/system-map sys)
-                {:foo 10
-                 :a {:a-arg 10}}))))
+      (let [sysmap (d/system-map sys)
+            x-sysmap {:foo 10 :a {:a-arg 10}}]
+        #?(:clj
+           (is (= @sysmap x-sysmap)))))
 
     (testing "start! returns same system map if already started"
-      #?(:clj
-         (is (= @(d/start! sys {:foo 20})
-                {:foo 10
-                 :a {:a-arg 10}}))))
+      (let [sysmap (d/start! sys {:foo 20})
+            x-sysmap {:foo 10 :a {:a-arg 10}}]
+        #?(:clj
+           (is (= @sysmap x-sysmap)))))
 
     (testing "simple system stops and returns a promise of the config"
-      #?(:clj
-         (is (= @(d/stop! sys)
-                {:foo 10}))))
+      (let [stop-sys (d/stop! sys)
+            x-stopmap {:foo 10}]
+        #?(:clj
+           (is (= @stop-sys x-stopmap)))))
 
     (testing "start! returns new system map when restarted"
-      #?(:clj
-         (is (= @(d/start! sys {:foo 20})
-                {:foo 20
-                 :a {:a-arg 20}}))))))
+      (let [sysmap (d/start! sys {:foo 20})
+            x-sysmap {:foo 20 :a {:a-arg 20}}]
+        #?(:clj
+           (is (= @sysmap x-sysmap)))))))
 
 ;; --- Entry Point
 

@@ -56,48 +56,50 @@
               :sys-atom (atom nil)
               :default-conf default-conf
               :label label})))
+#?(:clj
+   (defn- make-name
+     [base-name suffix]
+     (->> [base-name suffix]
+          (filter identity)
+          (str/join "-")
+          symbol)))
 
-(defn- make-name
-  [base-name suffix]
-  (->> [base-name suffix]
-       (filter identity)
-       (str/join "-")
-       symbol))
-
-(defn- defsystem*
-  [base-name builder default-conf]
-  (let [name (make-name base-name "sys")
-        start-name (make-name base-name "start!")
-        system-map-name (make-name base-name "system-map")
-        stop-name (make-name base-name "stop!")
-        reload-name (make-name base-name "reload!")]
-    `(do
-       (def ~name (deferst/create-system
+#?(:clj
+   (defn- defsystem*
+     [base-name builder default-conf]
+     (let [name (make-name base-name "sys")
+           start-name (make-name base-name "start!")
+           system-map-name (make-name base-name "system-map")
+           stop-name (make-name base-name "stop!")
+           reload-name (make-name base-name "reload!")]
+       `(do
+          (def ~name (deferst/create-system
                        ~builder
                        ~default-conf
                        (symbol (name (ns-name *ns*)) (name '~name))))
-       (defn ~start-name
-         ([] (deferst/start! ~name))
-         ([conf#] (deferst/start! ~name conf#)))
-       (defn ~system-map-name [] (deferst/system-map ~name))
-       (defn ~stop-name [] (deferst/stop! ~name))
-       (defn ~reload-name []
-         (deferst/stop! ~name)
-         (tn/refresh
-          :after
-          (symbol
-           (name (ns-name *ns*))
-           (name '~start-name)))))))
+          (defn ~start-name
+            ([] (deferst/start! ~name))
+            ([conf#] (deferst/start! ~name conf#)))
+          (defn ~system-map-name [] (deferst/system-map ~name))
+          (defn ~stop-name [] (deferst/stop! ~name))
+          (defn ~reload-name []
+            (deferst/stop! ~name)
+            (tn/refresh
+             :after
+             (symbol
+              (name (ns-name *ns*))
+              (name '~start-name))))))))
 
-(defmacro defsystem
-  "macro which defs some vars around a system and provides
+#?(:clj
+   (defmacro defsystem
+     "macro which defs some vars around a system and provides
    easy tools-namespace reloading. you get
 
    <base-name>-sys - the Sys record
    <base-name>-start! - start the system, with optional config
    <base-name>-stop! - stop the system if running
    <base-name>-reload! - stop!, tools.namespace refresh, start!"
-  ([builder default-conf]
-   (defsystem* nil builder default-conf))
-  ([base-name builder default-conf]
-   (defsystem* base-name builder default-conf)))
+     ([builder default-conf]
+      (defsystem* nil builder default-conf))
+     ([base-name builder default-conf]
+      (defsystem* base-name builder default-conf))))

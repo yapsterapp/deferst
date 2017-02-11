@@ -350,7 +350,25 @@
                                :error e}))))))))
 
      :cljs
-     (-> (run-state system-builder seed))))
+     (p/catch
+         (run-state system-builder seed)
+         (fn [e]
+           (let [{st :state :as xd} (ex-data e)
+                 sd (system-destructor st)]
+             (p/then
+              (p/catch
+                  (run-state sd st)
+                  (fn [ue]
+                    (throw
+                     (ex-info "unwind failed after start-system! failed"
+                              {:state st
+                               :error e
+                               :unwind-error ue}))))
+              (fn [_]
+                (throw
+                 (ex-info "start-system! failed and unwound"
+                          {:state st
+                           :error e})))))))))
 (defn- system-map*
   [system]
   (filter-system-map system))

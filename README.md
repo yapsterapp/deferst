@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/employeerepublic/deferst.svg?branch=master)](https://travis-ci.org/employeerepublic/deferst)
 
-a tiny clojure (soon clojurescript too) library for managing systems of interdependent objects. it's non-blocking, and it won't infect your codebase or force you to do anything unnatural
+a tiny clojure and clojurescript library for managing systems of interdependent objects. it's non-blocking, and it won't infect your codebase or force you to do anything unnatural
 
 ## Install
 
@@ -11,9 +11,13 @@ a tiny clojure (soon clojurescript too) library for managing systems of interdep
 ## Usage
 
 ``` clojure
-;; some example object factory fns - factory fns take a single map
+;; the managed objects are created by factory fns -
+;; whic take a single map
 ;; argument and return an object, or an
 ;; [object, 0-args-destructor-fn], or a promise thereof
+;;
+;; in clojure the promises are manifold/Deferred while in
+;; clojurescript they are bluebird through promesa
 
 (require 'manifold.deferred)
 (defn create-db-connection [{:keys [host port]}]

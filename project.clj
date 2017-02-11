@@ -19,4 +19,7 @@
   :plugins []
 
   :profiles {:dev {:dependencies [[org.clojure/clojure "1.8.0"]]
-                   :plugins []}})
+                   :plugins []}}
+
+  :clean-targets ^{:protect false} ["out"
+                                    :target-path])

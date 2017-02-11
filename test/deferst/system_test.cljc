@@ -302,7 +302,8 @@
            (fn [_] (is (= @destructor-vals x-dvals))
              (done))))))))
 
-(deftest dependent-item-system-with-mixed-destructors
+(defn dependent-item-system-with-mixed-destructors-fixtures
+  []
   (let [destructor-vals (atom [])
         ff (fn [v] [v (fn [] (swap! destructor-vals conj v))])
         sb (s/system-builder [[:a identity {:a-arg [:foo]}]
@@ -312,6 +313,24 @@
         stop-sys (s/stop-system! sys)
         x-sysmap {:foo 10 :a {:a-arg 10} :b {:b-arg 10}}
         x-dvals [{:b-arg 10}]]
+    {:destructor-vals destructor-vals
+     :ff ff
+     :sb sb
+     :sys sys
+     :sysmap sysmap
+     :stop-sys stop-sys
+     :x-sysmap x-sysmap
+     :x-dvals x-dvals}))
+
+(deftest dependent-item-system-with-mixed-destructors-creation
+  (let [{destructor-vals :destructor-vals
+         ff :ff
+         b :sb
+         sys :sys
+         sysmap :sysmap
+         stop-sys :stop-sys
+         x-sysmap :x-sysmap
+         x-dvals :x-dvals} (dependent-item-system-with-mixed-destructors-fixtures)]
 
     (testing "dependent items are created"
       #?(:clj
@@ -323,7 +342,17 @@
           (p/then
            sysmap
            (fn [v] (is (= v x-sysmap))
-             (done))))))
+             (done))))))))
+
+(deftest dependent-item-system-with-mixed-destructors-destruction
+  (let [{destructor-vals :destructor-vals
+         ff :ff
+         b :sb
+         sys :sys
+         sysmap :sysmap
+         stop-sys :stop-sys
+         x-sysmap :x-sysmap
+         x-dvals :x-dvals} (dependent-item-system-with-mixed-destructors-fixtures)]
 
     (testing "dependent items were destroyed"
       #?(:clj

@@ -1,4 +1,4 @@
-(defproject employeerepublic/deferst "0.4.2"
+(defproject employeerepublic/deferst "0.5.0"
   :description "a simple object system builder"
   :url "http://egithub.com/employeerepublic/deferst"
   :license {:name "Eclipse Public License"
@@ -9,12 +9,12 @@
   :exclusions [org.clojure/clojure]
 
   :dependencies [[org.clojure/clojure "1.8.0" :scope "provided"]
-                 [org.clojure/clojurescript "1.9.229" :scope "provided"]
+                 [org.clojure/clojurescript "1.9.521" :scope "provided"]
                  [org.clojure/tools.namespace "0.2.11"]
-                 [prismatic/plumbing "0.5.3"]
-                 [funcool/cats "2.0.0"]
-                 [funcool/promesa "1.5.0"]
-                 [manifold "0.1.5"]]
+                 [prismatic/plumbing "0.5.4"]
+                 [funcool/cats "2.1.0"]
+                 [funcool/promesa "1.8.1"]
+                 [manifold "0.1.6"]]
 
   :plugins []
 

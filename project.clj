@@ -1,4 +1,4 @@
-(defproject employeerepublic/deferst "0.5.0"
+(defproject employeerepublic/deferst "0.6.0"
   :description "a simple object system builder"
   :url "http://egithub.com/employeerepublic/deferst"
   :license {:name "Eclipse Public License"
@@ -14,7 +14,7 @@
                  [prismatic/plumbing "0.5.4"]
                  [funcool/cats "2.1.0"]
                  [funcool/promesa "1.8.1"]
-                 [manifold "0.1.6"]]
+                 [manifold "0.1.7-alpha6"]]
 
   :plugins []
 

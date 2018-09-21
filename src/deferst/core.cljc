@@ -116,6 +116,12 @@
           (str/join "-")
           symbol)))
 
+(defn refresh-start
+  "refresh and start on clj... error on cljs"
+  [after-sym]
+  #?(:clj (tn/refresh :after after-sym)
+     :cljs (throw (js/Error. "not implemented on cljs"))))
+
 #?(:clj
    (defn- defsystem*
      [base-name builder default-conf]
@@ -136,11 +142,8 @@
           (defn ~stop-name [] (deferst/stop! ~name))
           (defn ~reload-name []
             (deferst/stop! ~name)
-            (tn/refresh
-             :after
-             (symbol
-              (name (ns-name *ns*))
-              (name '~start-name))))))))
+            (refresh-start
+             (symbol (name (ns-name *ns*)) (name '~start-name))))))))
 
 #?(:clj
    (defmacro defsystem
